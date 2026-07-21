@@ -1,3 +1,5 @@
 Name: Your Name
 Learning: Git
 Goal: Learn Git basics
+
+Hobby: Reading
