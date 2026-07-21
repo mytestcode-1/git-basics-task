@@ -1,0 +1,62 @@
+#!/bin/bash
+
+ssh -i path ubuntu@ip
+aws--version
+pwd
+cd home/
+cd ..
+cd ../..
+mkdir home
+rm -r home
+rm -rf home
+touch home
+vim home.sh
+vi home.sh
+awk -F "" 'print$4'
+free
+free -g
+nproc
+df
+df -h
+man
+cat filename
+./ or sh to execute script
+chmod
+history
+:wq!
+:q!
+:qa
+set -x
+set -e
+set -o
+ps -ef
+grep
+curl site
+wget site to download
+sudo su -
+find / -filename
+trap
+
+git init
+git add
+git commit
+git checkout -b home
+git status
+git log
+git log --oneline
+git stash
+git stash pop
+git stash drop
+git stash list
+git commit --amend
+git tag
+git cherry-pick commit id
+git merge
+git rebase
+git reset --hard commitid
+git remote -v
+git remote add "path"
+git diff
+git clone
+git push
+
