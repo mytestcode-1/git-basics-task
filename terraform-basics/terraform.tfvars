@@ -1,0 +1,5 @@
+bucket_name = "prasanna-terraform-learning-001"
+environment = "Dev"
+owner = "Prasanna"
+project = "Terraform-Learning"
+instancename = "Myinstance"
