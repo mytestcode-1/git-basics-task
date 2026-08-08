@@ -1,4 +1,17 @@
-#!/bin/bash
+# Terraform working directory
+.terraform/
 
+# Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Temporary editor files
 *.swp
+*.swo
+
+# Log files
 *.log

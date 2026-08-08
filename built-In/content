@@ -1,0 +1,517 @@
+1. length()
+What does it do?
+
+Counts how many items are present.
+
+Example
+variable "environments" {
+  default = ["dev", "test", "prod"]
+}
+
+Then:
+
+length(var.environments)
+
+Result:
+
+3
+Why useful?
+
+Suppose you want Terraform to create one resource for every environment:
+
+resource "aws_s3_bucket" "bucket" {
+  count = length(var.environments)
+
+  bucket = "prasanna-bucket-${count.index}"
+}
+
+Terraform sees:
+
+length(["dev", "test", "prod"])
+                ↓
+                3
+                ↓
+              count
+                ↓
+       create 3 buckets
+2. toset()
+What does it do?
+
+Converts a list into a set.
+
+Example:
+
+toset(["dev", "test", "prod"])
+
+Result:
+
+dev
+test
+prod
+
+The important reason you use this is with for_each.
+
+Example
+variable "environments" {
+  default = ["dev", "test", "prod"]
+}
+
+Then:
+
+resource "aws_s3_bucket" "bucket" {
+  for_each = toset(var.environments)
+
+  bucket = "prasanna-${each.key}-bucket"
+}
+
+Terraform creates:
+
+prasanna-dev-bucket
+prasanna-test-bucket
+prasanna-prod-bucket
+
+Here:
+
+each.key
+
+will be:
+
+dev
+test
+prod
+3. tolist()
+
+This is basically the opposite idea.
+
+What does it do?
+
+Converts a set into a list.
+
+Example:
+
+tolist(toset(["dev", "test", "prod"]))
+
+Result:
+
+["dev", "test", "prod"]
+
+You won't use this very often in basic Terraform.
+
+4. lookup()
+
+This is useful when you have a map.
+
+Suppose:
+
+variable "instance_types" {
+  default = {
+    dev  = "t3.micro"
+    test = "t3.small"
+    prod = "t3.medium"
+  }
+}
+
+Think of it as:
+
+Key     Value
+----------------
+dev     t3.micro
+test    t3.small
+prod    t3.medium
+
+Now:
+
+lookup(var.instance_types, "dev", "t2.micro")
+
+Terraform asks:
+
+Find "dev" in this map.
+
+It finds:
+
+dev → t3.micro
+
+So the result is:
+
+t3.micro
+
+The third value "t2.micro" is the default if "dev" doesn't exist.
+
+5. element()
+What does it do?
+
+Gets an item from a list using its position.
+
+Remember positions start at 0.
+
+element(["dev", "test", "prod"], 0)
+
+Result:
+
+dev
+element(["dev", "test", "prod"], 1)
+
+Result:
+
+test
+element(["dev", "test", "prod"], 2)
+
+Result:
+
+prod
+
+Think:
+
+Index     Value
+----------------
+  0       dev
+  1       test
+  2       prod
+6. concat()
+What does it do?
+
+Combines two or more lists.
+
+Example:
+
+concat(
+  ["dev", "test"],
+  ["prod"]
+)
+
+Result:
+
+["dev", "test", "prod"]
+
+Another example:
+
+concat(
+  ["a", "b"],
+  ["c", "d"]
+)
+
+Result:
+
+["a", "b", "c", "d"]
+
+Think:
+
+List 1 + List 2
+       ↓
+Combined list
+7. join()
+What does it do?
+
+Takes multiple values and combines them into one string.
+
+Example:
+
+join("-", ["prasanna", "terraform", "dev"])
+
+Result:
+
+prasanna-terraform-dev
+
+Here "-" tells Terraform:
+
+Put - between every value.
+
+Another example:
+
+join("/", ["home", "ubuntu", "app"])
+
+Result:
+
+home/ubuntu/app
+
+This is useful for creating names and paths.
+
+8. split()
+
+split() is basically the opposite of join().
+
+Example
+split("-", "prasanna-terraform-dev")
+
+Result:
+
+["prasanna", "terraform", "dev"]
+
+Because Terraform sees:
+
+prasanna-terraform-dev
+       ↓
+split at "-"
+       ↓
+prasanna | terraform | dev
+
+So remember:
+
+join  → list → string
+
+split → string → list
+9. upper()
+
+Converts text to uppercase.
+
+upper("terraform")
+
+Result:
+
+TERRAFORM
+
+Example:
+
+tags = {
+  Environment = upper(var.environment)
+}
+
+If:
+
+environment = "dev"
+
+you get:
+
+Environment = "DEV"
+10. lower()
+
+Opposite of upper().
+
+lower("TERRAFORM")
+
+Result:
+
+terraform
+11. replace()
+What does it do?
+
+Replaces one piece of text with another.
+
+Example:
+
+replace("prasanna-dev-bucket", "dev", "prod")
+
+Result:
+
+prasanna-prod-bucket
+
+Think:
+
+Original:
+prasanna-dev-bucket
+
+Find:
+dev
+
+Replace with:
+prod
+
+Result:
+prasanna-prod-bucket
+12. format()
+
+Used to create a formatted string.
+
+Example:
+
+format("prasanna-%s-bucket", "dev")
+
+Result:
+
+prasanna-dev-bucket
+
+%s means:
+
+Put the string value here.
+
+You can also have multiple values:
+
+format("%s-%s-%s", "prasanna", "terraform", "dev")
+
+Result:
+
+prasanna-terraform-dev
+13. merge()
+
+This is important when working with maps, especially tags.
+
+Suppose you have:
+
+map1 = {
+  Environment = "Dev"
+}
+
+and:
+
+map2 = {
+  Project = "Terraform"
+}
+
+You can combine them:
+
+merge(
+  var.map1,
+  var.map2
+)
+
+Result:
+
+Environment = "Dev"
+Project     = "Terraform"
+Practical AWS example
+locals {
+  common_tags = {
+    Owner   = "Prasanna"
+    Project = "Terraform"
+  }
+
+  environment_tags = {
+    Environment = "Dev"
+  }
+}
+
+Then:
+
+tags = merge(
+  local.common_tags,
+  local.environment_tags
+)
+
+Your resource gets:
+
+Owner       = Prasanna
+Project     = Terraform
+Environment = Dev
+14. file()
+
+This one is very useful for EC2.
+
+Suppose you have:
+
+terraform/
+│
+├── main.tf
+└── script.sh
+
+script.sh:
+
+#!/bin/bash
+apt update
+apt install nginx -y
+
+In Terraform:
+
+resource "aws_instance" "server" {
+  ami           = "your-ami"
+  instance_type = "t3.micro"
+
+  user_data = file("script.sh")
+}
+
+Terraform reads:
+
+script.sh
+
+and puts its contents into:
+
+user_data
+
+So:
+
+script.sh
+      ↓
+    file()
+      ↓
+Terraform reads the file
+      ↓
+user_data
+      ↓
+EC2 runs the script
+15. templatefile()
+
+This is similar to file(), but allows you to pass variables into the file.
+
+Suppose:
+
+script.sh.tpl
+
+contains:
+
+#!/bin/bash
+
+echo "Environment is ${environment}"
+
+Terraform:
+
+user_data = templatefile("script.sh.tpl", {
+  environment = "dev"
+})
+
+Terraform replaces:
+
+${environment}
+
+with:
+
+dev
+
+So EC2 receives:
+
+#!/bin/bash
+
+echo "Environment is dev"
+The important ones for YOU
+
+Since you're learning Terraform practically, don't try to learn every Terraform function now.
+
+Learn them in this order:
+
+Level 1 — understand these first
+length()
+toset()
+
+These connect directly to:
+
+count
+for_each
+Level 2
+element()
+concat()
+join()
+split()
+
+These teach you how Terraform handles lists and strings.
+
+Level 3
+lookup()
+merge()
+
+These teach you maps.
+
+Level 4
+file()
+templatefile()
+
+These are very useful for EC2/user-data and scripts.
+
+One simple picture to remember
+                    Terraform Functions
+
+                         FUNCTIONS
+                             │
+          ┌──────────────────┼──────────────────┐
+          │                  │                  │
+        LIST               MAP               STRING
+          │                  │                  │
+     length()            lookup()           upper()
+     toset()             merge()            lower()
+     tolist()                              replace()
+     element()                             join()
+     concat()                              split()
+                                            format()
+          │                  │                  │
+          └──────────────────┼──────────────────┘
+                             │
+                        AWS RESOURCES
+                             │
+                   S3 / EC2 / VPC / etc.
